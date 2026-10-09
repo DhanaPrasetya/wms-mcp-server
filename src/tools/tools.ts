@@ -121,7 +121,9 @@ export default class MCPTools {
 		}
 
 		try {
-			const sessionId = getSingleHeaderValue(req.headers["mcp-session-id"]);
+			const sessionId: string | undefined = getSingleHeaderValue(
+				req.headers["mcp-session-id"],
+			);
 
 			let transport: StreamableHTTPServerTransport;
 

@@ -6,13 +6,13 @@ export default class RateLimitService {
 	constructor(protected rateLimitRepository: RedisRepository) {}
 
 	public async isPassApiValidRateLimit(
-		key: string,
+		ip: string,
 		ttlInSeconds: number,
 		maxAttemptPerMinute: number,
 	): Promise<{ isPass: boolean; remainingTtlInSecond: number }> {
 		const accessObject: { count: number; remainingTtlInSecond: number } =
 			await this.rateLimitRepository.initializeOrAddRateLimitCount(
-				key,
+				ip,
 				ttlInSeconds,
 				maxAttemptPerMinute,
 			);

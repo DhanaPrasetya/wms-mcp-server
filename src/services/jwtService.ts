@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import type { JwtHeader, SigningKeyCallback } from "jsonwebtoken";
 import jwksClient from "jwks-rsa";
+import { Service } from "typedi";
 import type { RequestContext } from "../tools/context.js";
 
 export interface userData {
@@ -14,6 +15,7 @@ export interface userData {
 	// aud: string,
 }
 
+@Service()
 export default class JwtService {
 	private getKey(header: JwtHeader, callback: SigningKeyCallback): void {
 		const jwksUri: string | undefined = process.env.PUBLIC_KEY_URL;

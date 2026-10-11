@@ -2,13 +2,14 @@ import type {
 	McpServer,
 	ToolCallback,
 } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Service } from "typedi";
+import { Inject, Service } from "typedi";
 import { z } from "zod";
 import { getRequestContext } from "../context.js";
 import type { RequestContext } from "../context.js";
-import { toolError, toolText } from "../toolResponse.js";
+import { toolError, toolText } from "../toolsResponse.js";
 import SecurityService from "../../services/securityService.js";
 import { apiCall, httpMethod } from "../../helper/apiCall.js";
+import { rootAdminOnly } from "../toolsAuthorization.js";
 
 const inputSchema: z.ZodRawShape = {
 	role_id: z.string().uuid().describe("The role ID of the user to register."),
@@ -30,7 +31,8 @@ const inputSchema: z.ZodRawShape = {
 
 @Service()
 export class RegisterUserTool {
-	constructor(private readonly security: SecurityService) {}
+	@Inject(() => SecurityService)
+	private readonly security!: SecurityService;
 
 	// arrow property keeps `this` bound when passed to registerTool
 	private handler: ToolCallback<typeof inputSchema> = async ({
@@ -44,11 +46,9 @@ export class RegisterUserTool {
 			const requestContext: RequestContext = getRequestContext();
 			const { req } = requestContext;
 
-			console.log("Request context:\n", req);
+			await this.security.verifyToolRequest(requestContext, rootAdminOnly);
 
-			await this.security.verifyToolRequest(requestContext, ["admin"]);
-
-			const apiRequest: object = await apiCall(
+			await apiCall(
 				httpMethod.POST,
 				req.headers.authorization ?? "",
 				"/users",
@@ -60,8 +60,6 @@ export class RegisterUserTool {
 					is_active,
 				},
 			);
-
-			console.log("API request result:\n", apiRequest);
 
 			return toolText({ message: "User registered successfully" });
 		} catch (err) {

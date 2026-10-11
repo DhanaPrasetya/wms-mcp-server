@@ -1,4 +1,4 @@
-import { Service } from "typedi";
+import { Inject, Service } from "typedi";
 import JwtService from "./jwtService.js";
 import RateLimitService from "./rateLimitService.js";
 import type { RequestContext } from "../tools/context.js";
@@ -6,25 +6,30 @@ import type { userData } from "./jwtService.js";
 
 @Service()
 export default class SecurityService {
-	constructor(
-		protected jwtService: JwtService,
-		protected rateLimitService: RateLimitService,
-	) {}
+	@Inject(() => JwtService)
+	private readonly jwtService!: JwtService;
+
+	@Inject(() => RateLimitService)
+	private readonly rateLimitService!: RateLimitService;
+
+	@Inject(() => SecurityService)
+	private readonly security!: SecurityService;
 
 	public async verifyToolRequest(
 		request: RequestContext,
 		allowedRolesArray: string[],
 	): Promise<void> {
-		const isPassRateLimit: { isPass: boolean; remainingTtlInSecond: number } =
+		const rateLimitCheck: { isPass: boolean; remainingTtlInSecond: number } =
 			await this.rateLimitService.isPassApiValidRateLimit(
+				// 30 attempts per minute
 				request.clientIp,
 				60,
-				10,
+				30,
 			);
 
-		if (!isPassRateLimit.isPass) {
+		if (!rateLimitCheck.isPass) {
 			throw new Error(
-				`Rate limit exceeded ! try again ${isPassRateLimit.remainingTtlInSecond} seconds`,
+				`Rate limit exceeded ! try again in ${rateLimitCheck.remainingTtlInSecond} seconds`,
 			);
 		}
 

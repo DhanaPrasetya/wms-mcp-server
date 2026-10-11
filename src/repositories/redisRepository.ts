@@ -41,27 +41,11 @@ export default class RedisRepository {
 			(await redisClient.eval(luaScript, {
 				keys: [key],
 				arguments: [String(ttlInSeconds), String(maxLimit)],
-			})) as [
-				number,
-				number,
-			];
+			})) as [number, number];
 
 		return {
 			count,
 			remainingTtlInSecond,
 		};
-	}
-
-	public async setKey(key: string, ttl: number): Promise<void> {
-		await redisClient.set(key, "1", { EX: ttl });
-	}
-
-	public async incrementKey(key: string): Promise<void> {
-		await redisClient.incr(key);
-	}
-
-	public async getKeyCount(key: string): Promise<number> {
-		const count: string | null = await redisClient.get(key);
-		return count ? parseInt(count, 10) : 0;
 	}
 }

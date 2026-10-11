@@ -1,9 +1,10 @@
-import { Service } from "typedi";
+import { Inject, Service } from "typedi";
 import RedisRepository from "../repositories/redisRepository.js";
 
 @Service()
 export default class RateLimitService {
-	constructor(protected rateLimitRepository: RedisRepository) {}
+	@Inject(() => RedisRepository)
+	private readonly rateLimitRepository!: RedisRepository;
 
 	public async isPassApiValidRateLimit(
 		ip: string,
@@ -28,32 +29,5 @@ export default class RateLimitService {
 			isPass: true,
 			remainingTtlInSecond: accessObject.remainingTtlInSecond,
 		};
-	}
-
-	public async invalidAttemptRateLimit(
-		userIp: string,
-		ttlInSeconds: number,
-	): Promise<boolean> {
-		const existingKey: number =
-			await this.rateLimitRepository.getKeyCount(userIp);
-		if (!existingKey) {
-			await this.rateLimitRepository.setKey(userIp, ttlInSeconds);
-			return true;
-		}
-		await this.rateLimitRepository.incrementKey(userIp);
-
-		return true;
-	}
-
-	public async isPassInvalidAttemptRateLimit(
-		userIp: string,
-		maxAttemptPerMinute: number,
-	): Promise<boolean> {
-		const currentCount: number =
-			await this.rateLimitRepository.getKeyCount(userIp);
-		if (currentCount >= maxAttemptPerMinute) {
-			return false;
-		}
-		return true;
 	}
 }

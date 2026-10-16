@@ -2,7 +2,6 @@ import jwt from "jsonwebtoken";
 import type { JwtHeader, SigningKeyCallback } from "jsonwebtoken";
 import jwksClient from "jwks-rsa";
 import { Service } from "typedi";
-import type { RequestContext } from "../tools/context.js";
 
 export interface userData {
 	id: string;
@@ -44,21 +43,14 @@ export default class JwtService {
 		});
 	}
 
-	public async verifyAuthToken(request: RequestContext): Promise<userData> {
-		const authHeader: string | undefined = request.req.headers.authorization;
-
-		if (!authHeader || !authHeader.startsWith("Bearer ")) {
-			throw new Error("Unauthorized: Missing or invalid Authorization header");
-		}
-		const authToken: string = authHeader.split(" ")[1];
-
+	public async verifyAuthToken(jwtToken: string): Promise<userData> {
 		return new Promise((resolve, reject) => {
 			jwt.verify(
-				authToken,
+				jwtToken,
 				this.getKey.bind(this),
 				{
 					algorithms: ["RS256"],
-					issuer: process.env.TOKEN_ISSUER,
+					issuer: process.env.API_BASE_URL,
 				},
 				(err, decoded) => {
 					if (err) return reject(err);

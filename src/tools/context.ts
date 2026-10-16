@@ -1,9 +1,12 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import type { Request } from "express";
+import type { Request, Response } from "express";
+import type { userData } from "../services/jwtService.js";
 
 export interface RequestContext {
 	req: Request;
+	res: Response;
 	clientIp: string;
+	user: userData;
 }
 
 export const requestContext: AsyncLocalStorage<RequestContext> =

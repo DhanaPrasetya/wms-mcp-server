@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import { connectRedis } from "./config/redis.js";
 import { rateLimit } from "express-rate-limit";
 import morgan from "morgan";
+import cors from "cors";
 
 await connectRedis();
 
@@ -39,12 +40,26 @@ app.use(
 	),
 );
 
+app.use(cors()); // Enable CORS * for all routes & tools
+
 // Use the routes
 app.use("/mcp", router);
 
+app.get(
+	"/.well-known/oauth-protected-resource",
+	(_req: Request, res: Response) => {
+		res.json({
+			resource: `${process.env.MCP_SERVER_URL}/mcp`,
+			authorization_servers: [process.env.API_BASE_URL],
+			bearer_methods_supported: ["header"],
+			scopes_supported: ["mcp"],
+		});
+	},
+);
+
 // Basic Route with typed request and response parameters
 app.get("/", (req: Request, res: Response) => {
-	res.json({ message: "Hello from Express with TypeScript!" });
+	res.json({ message: "Reached !" });
 });
 
 app.listen(PORT, () => {

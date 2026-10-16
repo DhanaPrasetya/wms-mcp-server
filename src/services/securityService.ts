@@ -2,7 +2,6 @@ import { Inject, Service } from "typedi";
 import JwtService from "./jwtService.js";
 import RateLimitService from "./rateLimitService.js";
 import type { RequestContext } from "../tools/context.js";
-import type { userData } from "./jwtService.js";
 
 @Service()
 export default class SecurityService {
@@ -33,9 +32,7 @@ export default class SecurityService {
 			);
 		}
 
-		const userData: userData = await this.jwtService.verifyAuthToken(request);
-
-		if (!allowedRolesArray.includes(userData.role)) {
+		if (!allowedRolesArray.includes(request.user.role)) {
 			throw new Error("Forbidden !");
 		}
 	}

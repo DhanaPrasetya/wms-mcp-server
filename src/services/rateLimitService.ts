@@ -8,8 +8,8 @@ export default class RateLimitService {
 
 	public async isPassApiValidRateLimit(
 		ip: string,
-		ttlInSeconds: number,
-		maxAttemptPerMinute: number,
+		ttlInSeconds: number = 60,
+		maxAttemptPerMinute: number = 30,
 	): Promise<{ isPass: boolean; remainingTtlInSecond: number }> {
 		const accessObject: { count: number; remainingTtlInSecond: number } =
 			await this.rateLimitRepository.initializeOrAddRateLimitCount(

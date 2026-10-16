@@ -1,9 +1,11 @@
 import express from "express";
 import type { Request, Response } from "express";
 import MCPTools from "../tools/server.js";
-// import AuthService from "../services/authService.js";
+import { authMiddleware } from "../middlewares/authMiddleware.js";
 const router: express.Router = express.Router();
 const mcpTools: MCPTools = new MCPTools();
+
+router.use(authMiddleware);
 
 router.post("/", async (request: Request, response: Response) => {
 	await mcpTools.handleRequest(request, response);

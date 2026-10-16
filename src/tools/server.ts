@@ -7,6 +7,7 @@ import type { Request, Response } from "express";
 import { Container } from "typedi";
 import { RegisterUserTool } from "./user/registerUser.js";
 import { requestContext, RequestContext } from "./context.js";
+import { TestTool } from "./test/test.js";
 
 interface SessionEntry {
 	server: McpServer;
@@ -59,6 +60,7 @@ function jsonRpcError(
 
 function registerTools(server: McpServer): void {
 	Container.get(RegisterUserTool).register(server);
+	Container.get(TestTool).register(server);
 }
 
 function createMcpServer(): McpServer {
@@ -126,7 +128,9 @@ export default class MCPTools {
 
 			const ctx: RequestContext = {
 				req,
+				res,
 				clientIp: req.ip ?? req.socket.remoteAddress ?? "unknown",
+				user: res.locals.user,
 			};
 
 			await requestContext.run(ctx, () =>
@@ -164,7 +168,9 @@ export default class MCPTools {
 
 		const ctx: RequestContext = {
 			req,
+			res,
 			clientIp: req.ip ?? req.socket.remoteAddress ?? "unknown",
+			user: res.locals.user,
 		};
 
 		try {

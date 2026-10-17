@@ -12,11 +12,8 @@ import { apiCall, httpMethod } from "../../helper/apiCall.js";
 import { rootAdminOnly } from "../toolsAuthorization.js";
 
 const inputSchema: z.ZodRawShape = {
-	role_id: z.string().uuid().describe("The role ID of the user to register."),
-	email: z
-		.string()
-		.email()
-		.describe("The email address of the user to register."),
+	role_id: z.uuid().describe("The role ID of the user to register."),
+	email: z.email().describe("The email address of the user to register."),
 	name: z.string().max(255).describe("The name of the user to register."),
 	password: z
 		.string()
@@ -48,18 +45,13 @@ export class RegisterUserTool {
 
 			await this.security.verifyToolRequest(requestContext, rootAdminOnly);
 
-			await apiCall(
-				httpMethod.POST,
-				req.headers.authorization ?? "",
-				"/users",
-				{
-					role_id,
-					email,
-					name,
-					password,
-					is_active,
-				},
-			);
+			await apiCall(httpMethod.POST, req.headers.authorization!, "/users", {
+				role_id,
+				email,
+				name,
+				password,
+				is_active,
+			});
 
 			return toolText({ message: "User registered successfully" });
 		} catch (err) {
@@ -74,6 +66,12 @@ export class RegisterUserTool {
 				title: "Register New User",
 				description: "Register a new user in the system.",
 				inputSchema,
+				annotations: {
+					readOnlyHint: false, // This tool is not read-only; it performs a write operation to register a new user.
+					destructiveHint: true, // This tool is destructive; it modifies the system state by adding a new user.
+					idempotentHint: false, // This tool is not idempotent; calling it multiple times with the same input will create the same users.
+					openWorldHint: true, // This tool is interact with external systems
+				},
 			},
 			this.handler,
 		);

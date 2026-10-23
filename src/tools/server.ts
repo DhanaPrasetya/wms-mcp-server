@@ -5,9 +5,8 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import type { Request, Response } from "express";
 import { Container } from "typedi";
-import { RegisterUserTool } from "./user/registerUser.js";
+import { GetPaginatedProductTool } from "./product/getPaginatedProduct.js";
 import { requestContext, RequestContext } from "./context.js";
-import { TestTool } from "./test/test.js";
 
 interface SessionEntry {
 	server: McpServer;
@@ -59,8 +58,7 @@ function jsonRpcError(
 }
 
 function registerTools(server: McpServer): void {
-	Container.get(RegisterUserTool).register(server);
-	Container.get(TestTool).register(server);
+	Container.get(GetPaginatedProductTool).register(server);
 }
 
 function createMcpServer(): McpServer {

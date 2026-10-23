@@ -1,4 +1,4 @@
-export enum httpMethod {
+export enum HttpMethod {
 	GET = "GET",
 	POST = "POST",
 	PUT = "PUT",
@@ -6,50 +6,99 @@ export enum httpMethod {
 	DELETE = "DELETE",
 }
 
-type ApiResponse = {
+export type ApiResponse<T = unknown> = {
 	status: number;
+	data?: T;
 };
 
-export async function apiCall(
-	method: httpMethod,
-	authToken: string,
-	endpoint: string,
-	body?: object,
-): Promise<ApiResponse> {
-	const response: ApiResponse = await fetch(
-		`${process.env.API_BASE_URL}${endpoint}`,
-		{
-			method: method,
-			headers: {
-				"Content-Type": "application/json",
-				Authorization: authToken,
-			},
-			body: JSON.stringify({
-				body,
-			}),
-		},
-	);
+export type ApiCallPayload = {
+	method: HttpMethod;
+	authToken?: string;
+	endpoint: string;
+	body?: Record<string, unknown>;
+	query?: Record<string, string | number | boolean | unknown>;
+	params?: Record<string, string | number>;
+};
+
+export async function apiCall<T = unknown>(
+	payload: ApiCallPayload,
+): Promise<ApiResponse<T>> {
+	const { method, authToken, body, query, params } = payload;
+	let { endpoint } = payload;
+
+	if (params) {
+		for (const [key, value] of Object.entries(params)) {
+			endpoint = endpoint.replace(`:${key}`, encodeURIComponent(String(value)));
+		}
+	}
+
+	const url: URL = new URL(endpoint, process.env.API_BASE_URL);
+
+	if (query) {
+		for (const [key, value] of Object.entries(query)) {
+			if (value !== undefined && value !== null) {
+				url.searchParams.append(key, String(value));
+			}
+		}
+	}
+
+	const headers: Record<string, string> = {
+		"Content-Type": "application/json",
+	};
+
+	if (authToken) {
+		headers.Authorization = authToken.startsWith("Bearer ")
+			? authToken
+			: `Bearer ${authToken}`;
+	}
+
+	const fetchOptions: RequestInit = {
+		method,
+		headers,
+	};
+
+	if (body && method !== HttpMethod.GET) {
+		fetchOptions.body = JSON.stringify(body);
+	}
+
+	const response: Response = await fetch(url.toString(), fetchOptions);
 
 	switch (response.status) {
 		case 400:
-			throw Error("Bad request response from wms-api");
+			throw new Error("Bad request response from wms-api");
 		case 401:
-			throw Error("Unauthorized request response from wms-api");
+			throw new Error("Unauthorized request response from wms-api");
 		case 403:
-			throw Error("Forbidden request response from wms-api");
+			throw new Error("Forbidden request response from wms-api");
 		case 404:
-			throw Error("Not found response from wms-api");
+			throw new Error("Not found response from wms-api");
 		case 409:
-			throw Error("Conflict response from wms-api");
+			throw new Error("Conflict response from wms-api");
 		case 422:
-			throw Error("Unprocessable entity response from wms-api");
+			throw new Error("Unprocessable entity response from wms-api");
 		case 429:
-			throw Error("Too many requests response from wms-api");
+			throw new Error("Too many requests response from wms-api");
 		case 500:
-			throw Error("Internal server error response from wms-api");
+			throw new Error("Internal server error response from wms-api");
 		default:
+			if (!response.ok) {
+				throw new Error(
+					`Unhandled HTTP Error: ${response.status} from wms-api`,
+				);
+			}
 			break;
 	}
 
-	return response;
+	// 7. Parse response body if available
+	let data: T | undefined;
+	const contentType: string | null = response.headers.get("content-type");
+
+	if (contentType && contentType.includes("application/json")) {
+		data = (await response.json()) as T;
+	}
+
+	return {
+		status: response.status,
+		data,
+	};
 }

@@ -2,21 +2,17 @@ import { Inject, Service } from "typedi";
 import RedisRepository from "../repositories/redisRepository.js";
 
 @Service()
-export default class RateLimitService {
+export default class CacheService {
 	@Inject(() => RedisRepository)
 	private readonly rateLimitRepository!: RedisRepository;
 
-	public async isPassApiValidRateLimit(
-		ip: string,
-		ttlInSeconds: number = 60,
-		maxAttemptPerMinute: number = 30,
+	public async isPassUserIdRateLimit(
+		userId: string,
 	): Promise<{ isPass: boolean; remainingTtlInSecond: number }> {
+		const maxAttemptPerMinute: number = 80;
+
 		const accessObject: { count: number; remainingTtlInSecond: number } =
-			await this.rateLimitRepository.initializeOrAddRateLimitCount(
-				ip,
-				ttlInSeconds,
-				maxAttemptPerMinute,
-			);
+			await this.rateLimitRepository.getRateLimitCount(`rate-limit:${userId}`);
 
 		if (accessObject.count > maxAttemptPerMinute) {
 			return {
@@ -29,5 +25,9 @@ export default class RateLimitService {
 			isPass: true,
 			remainingTtlInSecond: accessObject.remainingTtlInSecond,
 		};
+	}
+
+	public async get(key: string): Promise<string | null> {
+		return await this.rateLimitRepository.get(key);
 	}
 }

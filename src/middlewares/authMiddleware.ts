@@ -1,9 +1,12 @@
 import type { NextFunction, Request, Response } from "express";
 import { Container } from "typedi";
 import JwtService from "../services/jwtService.js";
+import ContextAccessService from "../services/contextAccessService.js";
 import type { userData } from "../services/jwtService.js";
 
 const jwtService: JwtService = Container.get(JwtService);
+const contextAccessService: ContextAccessService =
+	Container.get(ContextAccessService);
 
 function resourceMetadata(res: Response): void {
 	res.setHeader(
@@ -18,6 +21,14 @@ export async function authMiddleware(
 	res: Response,
 	next: NextFunction,
 ): Promise<void> {
+	const isValidContextAccess: boolean | string =
+		await contextAccessService.isValidContextAccess(req.ip!);
+
+	if (typeof isValidContextAccess === "string") {
+		res.status(403).send(isValidContextAccess);
+		return;
+	}
+
 	const authHeader: string | undefined = req.headers.authorization;
 
 	if (!authHeader || !authHeader.startsWith("Bearer ")) {

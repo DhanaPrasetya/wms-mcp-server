@@ -59,6 +59,7 @@ export class GetPaginatedProductTool {
 
 			await this.security.verifyToolRequest(
 				requestContext,
+				"fetching_paginated_products",
 				managerOperationalSalesOnly,
 			);
 

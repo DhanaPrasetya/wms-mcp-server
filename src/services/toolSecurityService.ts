@@ -13,10 +13,15 @@ export default class ToolSecurityService {
 
 	public async verifyToolRequest(
 		request: RequestContext,
+		toolName: string,
 		allowedRolesArray?: string[],
 	): Promise<void> {
+		console.info(
+			`\nTool access | ${new Date().toLocaleString()} - ${toolName} ${request.clientIp}\n`,
+		); // Log the tool name and client IP address
+
 		const isValidContextAccess: boolean | string =
-			await this.accessService.isValidContextAccess(request.clientIp);
+			await this.accessService.isValidContextAccess();
 
 		if (typeof isValidContextAccess === "string") {
 			throw new Error(isValidContextAccess);

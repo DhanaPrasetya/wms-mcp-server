@@ -22,7 +22,7 @@ export async function authMiddleware(
 	next: NextFunction,
 ): Promise<void> {
 	const isValidContextAccess: boolean | string =
-		await contextAccessService.isValidContextAccess(req.ip!);
+		await contextAccessService.isValidContextAccess();
 
 	if (typeof isValidContextAccess === "string") {
 		res.status(403).send(isValidContextAccess);

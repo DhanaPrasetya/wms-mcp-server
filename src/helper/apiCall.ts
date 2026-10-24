@@ -65,26 +65,28 @@ export async function apiCall<T = unknown>(
 
 	switch (response.status) {
 		case 400:
-			throw new Error("Bad request response from wms-api");
+			throw new Error("Bad request !");
 		case 401:
-			throw new Error("Unauthorized request response from wms-api");
+			throw new Error("Unauthorized !");
 		case 403:
-			throw new Error("Forbidden request response from wms-api");
+			throw new Error(
+				"Forbidden! Either your are not connected on allowed network or you don't have the required permissions to access this tools",
+			);
 		case 404:
-			throw new Error("Not found response from wms-api");
+			throw new Error("Not found !");
 		case 409:
-			throw new Error("Conflict response from wms-api");
+			throw new Error("Conflict !");
 		case 422:
-			throw new Error("Unprocessable entity response from wms-api");
+			throw new Error("Unprocessable entity !");
 		case 429:
-			throw new Error("Too many requests response from wms-api");
+			throw new Error("Too many requests !");
 		case 500:
-			throw new Error("Internal server error response from wms-api");
+			throw new Error("Internal server error !");
 		default:
+			console.error(`Unhandled error !\n\n ${response}\n`);
+
 			if (!response.ok) {
-				throw new Error(
-					`Unhandled HTTP Error: ${response.status} from wms-api`,
-				);
+				throw new Error(`Unhandled error !`);
 			}
 			break;
 	}

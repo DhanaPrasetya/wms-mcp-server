@@ -8,9 +8,9 @@ import { rateLimit } from "express-rate-limit";
 import morgan from "morgan";
 import cors from "cors";
 
-await connectRedis();
-
 dotenv.config();
+
+await connectRedis();
 
 const app: express.Application = express();
 const PORT: string | number = process.env.PORT || 3000;
@@ -41,6 +41,8 @@ app.use(
 );
 
 app.use(cors()); // Enable CORS * for all routes & tools
+
+app.set("trust proxy", 1); // Enable if behind a single reverse proxy
 
 // Use the routes
 app.use("/mcp", router);

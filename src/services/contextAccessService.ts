@@ -65,14 +65,8 @@ export default class ContextAccessService {
 		return hours * 60 + (minutes || 0);
 	}
 
-	public async isValidContextAccess(ip: string): Promise<boolean | string> {
+	public async isValidContextAccess(): Promise<boolean | string> {
 		const contextAccess: contextAccess = await this.getContexAccess();
-
-		const normalizedIp: string = ip.replace(/^::ffff:/, "");
-
-		if (!contextAccess.whitelist_ips.includes(normalizedIp)) {
-			return "\nForbidden: Your are not connected to allowed network";
-		}
 
 		const now: Date = new Date();
 		const currentMinutes: number = now.getHours() * 60 + now.getMinutes();

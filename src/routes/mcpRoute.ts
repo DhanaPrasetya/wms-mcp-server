@@ -1,6 +1,6 @@
 import express from "express";
 import type { Request, Response } from "express";
-import MCPTools from "../tools/server.js";
+import MCPTools from "../tools/mcpController.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 const router: express.Router = express.Router();
 const mcpTools: MCPTools = new MCPTools();

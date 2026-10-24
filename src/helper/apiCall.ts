@@ -70,7 +70,7 @@ export async function apiCall<T = unknown>(
 			throw new Error("Unauthorized !");
 		case 403:
 			throw new Error(
-				"Forbidden! Either your are not connected on allowed network or you don't have the required permissions to access this tools",
+				"Forbidden! Either your are not connected on allowed network or accessing outside work hours",
 			);
 		case 404:
 			throw new Error("Not found !");

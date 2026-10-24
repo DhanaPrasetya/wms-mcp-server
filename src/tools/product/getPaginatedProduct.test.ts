@@ -30,16 +30,16 @@ describe("GetPaginatedProductTool", () => {
 		req: { headers: { authorization: "Bearer test-token" } } as Request,
 		res: {} as Response,
 		clientIp: "127.0.0.1",
-			user: {
-				id: "user-1",
-				name: "Test User",
-				role: "Manager",
-				jti: "token-id",
-				iat: 0,
-				exp: 9999999999,
-				iss: "test-issuer",
-			},
-		};
+		user: {
+			id: "user-1",
+			name: "Test User",
+			role: "Manager",
+			jti: "token-id",
+			iat: 0,
+			exp: 9999999999,
+			iss: "test-issuer",
+		},
+	};
 	let security: SecurityServiceMock;
 	let handler: RegisteredHandler;
 
@@ -78,7 +78,7 @@ describe("GetPaginatedProductTool", () => {
 		expect(security.verifyToolRequest).toHaveBeenCalledWith(
 			requestContext,
 			"fetching_paginated_products",
-			["Manager", "Operational", "Sales"],
+			["Manager", "Inventory Staff", "Sales Staff"],
 		);
 		expect(apiCall).toHaveBeenCalledWith({
 			method: "GET",

@@ -8,3 +8,10 @@ export enum Pagination {
 	limitDefault = 10,
 	limitMax = 100,
 }
+
+export const rootAdminOnly: string[] = ["Root Admin"];
+export const managerInventorySalesOnly: string[] = [
+	"Manager",
+	"Inventory Staff",
+	"Sales Staff",
+];

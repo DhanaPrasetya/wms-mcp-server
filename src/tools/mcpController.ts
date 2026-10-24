@@ -18,6 +18,21 @@ const sessions: Map<string, SessionEntry> = new Map();
 
 const SESSION_TIMEOUT_MS: number = 25 * 60 * 1000; // 25 minutes idle timeout
 const SWEEP_INTERVAL_MS: number = 5 * 60 * 1000; // sweep every 5 minutes
+const SERVER_NAME: string = "wms-mcp-server";
+const SERVER_VERSION: string = "1.0.0";
+
+function registerTools(server: McpServer): void {
+	Container.get(GetPaginatedProductTool).register(server);
+}
+
+function createMcpServer(): McpServer {
+	const server: McpServer = new McpServer({
+		name: SERVER_NAME,
+		version: SERVER_VERSION,
+	});
+	registerTools(server);
+	return server;
+}
 
 let sweepStarted: boolean = false;
 
@@ -57,19 +72,6 @@ function jsonRpcError(
 	});
 }
 
-function registerTools(server: McpServer): void {
-	Container.get(GetPaginatedProductTool).register(server);
-}
-
-function createMcpServer(): McpServer {
-	const server: McpServer = new McpServer({
-		name: "wms-mcp-server",
-		version: "1.0.0",
-	});
-	registerTools(server);
-	return server;
-}
-
 export default class MCPTools {
 	constructor() {
 		startSessionSweeper();
@@ -94,6 +96,27 @@ export default class MCPTools {
 
 		await server.connect(transport);
 		return entry;
+	}
+
+	private getRequestContext(req: Request, res: Response): RequestContext {
+		return {
+			req,
+			res,
+			clientIp: req.ip ?? req.socket.remoteAddress ?? "unknown",
+			user: res.locals.user,
+		};
+	}
+
+	private async handleTransportRequest(
+		req: Request,
+		res: Response,
+		entry: SessionEntry,
+		body?: unknown,
+	): Promise<void> {
+		entry.lastActive = Date.now();
+		await requestContext.run(this.getRequestContext(req, res), () =>
+			entry.transport.handleRequest(req, res, body),
+		);
 	}
 
 	/** POST /mcp */
@@ -121,29 +144,14 @@ export default class MCPTools {
 				);
 			}
 
-			entry.lastActive = Date.now();
-			const active: SessionEntry = entry;
-
-			const ctx: RequestContext = {
-				req,
-				res,
-				clientIp: req.ip ?? req.socket.remoteAddress ?? "unknown",
-				user: res.locals.user,
-			};
-
-			await requestContext.run(ctx, () =>
-				active.transport.handleRequest(req, res, req.body),
-			);
+			await this.handleTransportRequest(req, res, entry, req.body);
 		} catch (err) {
 			if (!res.headersSent) {
-				res.status(500).json({
-					jsonrpc: "2.0",
-					error: {
-						code: -32603,
-						message: err instanceof Error ? err.message : String(err),
-					},
-					id: null,
-				});
+				jsonRpcError(
+					res,
+					500,
+					err instanceof Error ? err.message : String(err),
+				);
 			}
 		}
 	};
@@ -162,19 +170,8 @@ export default class MCPTools {
 			return jsonRpcError(res, 404, "Session not found");
 		}
 
-		entry.lastActive = Date.now();
-
-		const ctx: RequestContext = {
-			req,
-			res,
-			clientIp: req.ip ?? req.socket.remoteAddress ?? "unknown",
-			user: res.locals.user,
-		};
-
 		try {
-			await requestContext.run(ctx, () =>
-				entry.transport.handleRequest(req, res),
-			);
+			await this.handleTransportRequest(req, res, entry);
 		} catch (err) {
 			if (!res.headersSent) {
 				jsonRpcError(

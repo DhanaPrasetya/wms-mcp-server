@@ -9,8 +9,10 @@ import type { RequestContext } from "../context.js";
 import { toolError, toolText } from "../toolsResponse.js";
 import ToolSecurityService from "../../services/toolSecurityService.js";
 import { apiCall, HttpMethod, ApiResponse } from "../../helper/apiCall.js";
-import { managerOperationalSalesOnly } from "../toolsAuthorization.js";
+import { managerInventorySalesOnly } from "../../enums/tool.js";
 import { OrderBy, Pagination } from "../../enums/tool.js";
+
+const TOOL_NAME: string = "fetching_paginated_products";
 
 const inputSchema: z.ZodRawShape = {
 	name: z
@@ -54,18 +56,17 @@ export class GetPaginatedProductTool {
 		order_by,
 	}) => {
 		try {
-			const requestContext: RequestContext = getRequestContext();
-			const { req } = requestContext;
+			const context: RequestContext = getRequestContext();
 
 			await this.security.verifyToolRequest(
-				requestContext,
-				"fetching_paginated_products",
-				managerOperationalSalesOnly,
+				context,
+				TOOL_NAME,
+				managerInventorySalesOnly,
 			);
 
 			const data: ApiResponse<object> = await apiCall({
 				method: HttpMethod.GET,
-				authToken: req.headers.authorization,
+				authToken: context.req.headers.authorization,
 				endpoint: "/products",
 				query: {
 					name,
@@ -83,7 +84,7 @@ export class GetPaginatedProductTool {
 
 	register(server: McpServer): void {
 		server.registerTool(
-			"fetching_paginated_products",
+			TOOL_NAME,
 			{
 				title: "Fetch Paginated Products",
 				description: "Fetch a list of products with pagination.",

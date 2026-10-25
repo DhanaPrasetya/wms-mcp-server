@@ -20,8 +20,8 @@ describe("CacheService", () => {
 	});
 
 	it.each([
-		[80, true],
-		[81, false],
+		[39, true],
+		[40, false],
 	])(
 		"returns pass=%s for a count at the rate limit boundary",
 		async (count, isPass) => {

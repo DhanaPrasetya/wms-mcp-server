@@ -81,9 +81,32 @@ export async function apiCall<T = unknown>(
 		case 429:
 			throw new Error("Too many requests !");
 		case 500:
+			console.error(
+				`-----------------------\n${response}\n-----------------------`,
+			);
 			throw new Error("Internal server error !");
+		case 502:
+			console.error(
+				`-----------------------\n${response}\n-----------------------`,
+			);
+
+			throw new Error("Bad gateway !");
+		case 503:
+			console.error(
+				`-----------------------\n${response}\n-----------------------`,
+			);
+
+			throw new Error("Service unavailable !");
+		case 504:
+			console.error(
+				`-----------------------\n${response}\n-----------------------`,
+			);
+
+			throw new Error("Gateway timeout !");
 		default:
-			console.error(`Unhandled error !\n\n ${response}\n`);
+			console.error(
+				`-----------------------\n${response}\n-----------------------`,
+			);
 
 			if (!response.ok) {
 				throw new Error(`Unhandled error !`);

@@ -1,5 +1,6 @@
 import { Inject, Service } from "typedi";
 import RedisRepository from "../repositories/redisRepository.js";
+import { maxToolCallPerMinute } from "../enums/rules.js";
 
 @Service()
 export default class CacheService {
@@ -9,12 +10,10 @@ export default class CacheService {
 	public async isPassUserIdRateLimit(
 		userId: string,
 	): Promise<{ isPass: boolean; remainingTtlInSecond: number }> {
-		const maxAttemptPerMinute: number = 80;
-
 		const accessObject: { count: number; remainingTtlInSecond: number } =
 			await this.rateLimitRepository.getRateLimitCount(`rate-limit:${userId}`);
 
-		if (accessObject.count > maxAttemptPerMinute) {
+		if (accessObject.count >= maxToolCallPerMinute) {
 			return {
 				isPass: false,
 				remainingTtlInSecond: accessObject.remainingTtlInSecond,
